@@ -19,16 +19,7 @@ type RssfsConfig struct {
 
 func ConfigFilePath() string {
 	// Returns the path to our configuration file, whether it exists or not.
-	// On Windows, this should be %APPDAT	"context"
-	"fmt"
-	"os"
-	"os/user"
-	"path/filepath"
-	"runtime"
-	"strconv"
-	"sync"
-	"syscall"
-	"time"A%\rssfs.hcl.
+	// On Windows, this should be %APPDATA%\rssfs.hcl.
 	return fmt.Sprintf("%s\\rssfs.hcl", os.Getenv("APPDATA"))
 }
 
