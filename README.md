@@ -18,7 +18,7 @@ Compatibility
 This software is written and tested mainly on macOS with
 [OSXFUSE](http://osxfuse.github.io). Other FUSE implementations should
 work as well. Note that Windows support is still a work in progress and
-it does not really exist yet.
+does not really exist yet. (Contributions welcome!)
 
 Build
 -----
