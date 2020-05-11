@@ -9,10 +9,13 @@ import (
 )
 
 func PopulateFeedTree(cfg RssfsConfig) (map[string][]*IndexedFile) {
+	// Generates a file system, returns a tree of folders and files.
+	// This updates each feed in the tree, it can be a relatively
+	// slow operation on more than just a handful of feeds...
+	// TODO: Add a way to update only single feeds.
 	retval := make(map[string][]*IndexedFile)
 	nodeCount := uint64(1001)
 	
-	// Generate our file system: Populate the retval.
 	rootItems := make([]*IndexedFile, 0)
 	fp := gofeed.NewParser()
 	
@@ -141,7 +144,7 @@ func PopulateFeedTree(cfg RssfsConfig) (map[string][]*IndexedFile) {
 		retval["/" + fileNameClean(feeddata.Title)] = feedFiles
 	}
 
-	// Finalize the retval:
+	// Finalize the tree:
 	retval["/"] = rootItems
 
 	return retval
