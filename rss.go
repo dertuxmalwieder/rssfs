@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/hcl/v2/hclsimple"
-	"github.com/mmcdole/gofeed"
 )
 
 var (
@@ -80,146 +79,14 @@ func main() {
 
 	fmt.Printf("Using configuration file: %s\n", ConfigFilePath())
 
-	nodeCount := uint64(1001)
-	
-	// Generate our file system: Populate the tree.
-	rootItems := make([]*IndexedFile, 0)
-	fp := gofeed.NewParser()
-	
-	for _, category := range cfg.Categories {
-		// Add each category as a subdirectory.
-		catsFeeds := make([]*IndexedFile, 0)
-
-		// Descend into them and add the feeds.
-		for _, subfeed := range category.Feeds {
-			feeddata, _ := fp.ParseURL(subfeed.URL)
-			feedFiles := make([]*IndexedFile, 0)
-
-			var nodeTimestamp time.Time
-
-			// Note: Certain blogs won't send a valid time stamp. Urgh.
-			if (feeddata.UpdatedParsed != nil) {
-				nodeTimestamp = *(feeddata.UpdatedParsed)
-			} else {
-				if (feeddata.PublishedParsed != nil) {
-					nodeTimestamp = *(feeddata.PublishedParsed)
-				} else {
-					nodeTimestamp = time.Now()
-				}
-			}
-
-			catsFeeds = append(catsFeeds, &IndexedFile{
-				Filename:    fileNameClean(feeddata.Title),
-				IsDirectory: true,
-				Timestamp:   nodeTimestamp,
-				Inode:       nodeCount,
-			})
-
-			nodeCount++
-
-			// Add files to the feeds:
-			for _, item := range feeddata.Items {
-				var itemTimestamp time.Time
-				if (item.UpdatedParsed != nil) {
-					itemTimestamp = *(item.UpdatedParsed)
-				} else {
-					if (item.PublishedParsed != nil) {
-						itemTimestamp = *(item.PublishedParsed)
-					} else {
-						itemTimestamp = time.Now()
-					}
-				}
-
-				extension, content := GenerateOutputData(subfeed, item)
-				feedFiles = append(feedFiles, &IndexedFile{
-					Filename:    fmt.Sprintf("%s.%s", fileNameClean(item.Title), extension),
-					Timestamp:   itemTimestamp,
-					Inode:       nodeCount,
-					Data:        []byte(content),
-				})
-
-				nodeCount++
-			}
-
-			tree["/" + fileNameClean(category.Name) + "/" + fileNameClean(feeddata.Title)] = feedFiles
-		}
-
-		tree["/" + fileNameClean(category.Name)] = catsFeeds
-		
-		// Finally, append this category to our root structure:
-		rootItems = append(rootItems, &IndexedFile{
-			Filename:    fileNameClean(category.Name),
-			IsDirectory: true,
-			Timestamp:   time.Now(),
-			Inode:       nodeCount,
-		})
-		
-		nodeCount++
-	}
-
-	for _, feed := range cfg.Feeds {
-		// Add the feeds in the root structure as well.
-		feeddata, _ := fp.ParseURL(feed.URL)
-
-		var nodeTimestamp time.Time
-
-		// Note: Certain blogs won't send a valid time stamp. Urgh.
-		if (feeddata.UpdatedParsed != nil) {
-			nodeTimestamp = *(feeddata.UpdatedParsed)
-		} else {
-			if (feeddata.PublishedParsed != nil) {
-				nodeTimestamp = *(feeddata.PublishedParsed)
-			} else {
-				nodeTimestamp = time.Now()
-			}
-		}
-
-		rootItems = append(rootItems, &IndexedFile{
-			Filename:    fileNameClean(feeddata.Title),
-			IsDirectory: true,
-			Timestamp:   nodeTimestamp,
-			Inode:       nodeCount,
-		})
-		
-		nodeCount++
-		
-		// Add files to the feeds:
-		feedFiles := make([]*IndexedFile, 0)
-		for _, item := range feeddata.Items {
-			var itemTimestamp time.Time
-			if (item.UpdatedParsed != nil) {
-				itemTimestamp = *(item.UpdatedParsed)
-			} else {
-				if (item.PublishedParsed != nil) {
-					itemTimestamp = *(item.PublishedParsed)
-				} else {
-					itemTimestamp = time.Now()
-				}
-			}
-			
-			extension, content := GenerateOutputData(feed, item)
-			feedFiles = append(feedFiles, &IndexedFile{
-				Filename:    fmt.Sprintf("%s.%s", fileNameClean(item.Title), extension),
-				Timestamp:   itemTimestamp,
-				Inode:       nodeCount,
-				Data:        []byte(content),
-			})
-			
-			nodeCount++
-		}
-
-		tree["/" + fileNameClean(feeddata.Title)] = feedFiles
-	}
-
-	// Finalize the tree:
-	tree["/"] = rootItems
-
+	tree = PopulateFeedTree(cfg)
 	for parentPath, children := range tree {
 		for _, child := range children {
 			fullPath := filepath.Join(parentPath, child.Filename)
 			fileIndex[fullPath] = child
 		}
 	}
+	
 
 	if (runtime.GOOS == "windows") {
 		fmt.Printf("Trying to mount rssfs into %s:...\n", cfg.DriveLetter)

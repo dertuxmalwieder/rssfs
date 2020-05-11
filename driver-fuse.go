@@ -16,6 +16,10 @@ import (
 	"github.com/hanwen/go-fuse/v2/fuse"
 )
 
+var (
+	config RssfsConfig
+)
+
 // -------------------------
 // Go-FUSE implementation:
 // -------------------------
@@ -93,6 +97,16 @@ func (n *RssfsNode) Opendir(ctx context.Context) syscall.Errno {
 func (n *RssfsNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
 	// Returns a list of file entries for currentPath().
 	path := n.currentPath()
+
+	// Refresh the feeds on every read:
+	// TODO: I guess we should only refresh the current path...
+	tree = PopulateFeedTree(config)
+	for parentPath, children := range tree {
+		for _, child := range children {
+			fullPath := filepath.Join(parentPath, child.Filename)
+			fileIndex[fullPath] = child
+		}
+	}
 
 	files, found := tree[path]
 	if found == false {
@@ -195,7 +209,10 @@ func (n *RssfsNode) Open(ctx context.Context, mode uint32) (fh fs.FileHandle, fu
 }
 
 func Mount(cfg RssfsConfig) {
-	// Mounts the feeds into our drive letter.
+	// Store the configuration globally.
+	config = cfg
+	
+	// Mounts the feeds into our mountpoint.
 	virtualRootPath := "/"
 
 	rn := NewRssfsNode(virtualRootPath)
