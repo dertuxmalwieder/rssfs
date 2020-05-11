@@ -52,7 +52,8 @@ type IndexedFile struct {
 	Inode       uint64
 	Size        uint64
 
-	Data []byte
+	Data        []byte
+	Feed        *Feed
 }
 
 func fileNameClean(in string) string {

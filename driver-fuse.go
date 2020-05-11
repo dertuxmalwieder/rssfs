@@ -98,13 +98,23 @@ func (n *RssfsNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
 	// Returns a list of file entries for currentPath().
 	path := n.currentPath()
 
-	// Refresh the feeds on every read:
-	// TODO: I guess we should only refresh the current path...
-	tree = PopulateFeedTree(config)
-	for parentPath, children := range tree {
-		for _, child := range children {
-			fullPath := filepath.Join(parentPath, child.Filename)
-			fileIndex[fullPath] = child
+	if fileIndex[path].Feed != nil {
+		// Feed objects are set for single feeds. The user seems to read
+		// a single feed. Let's update it first.
+		fmt.Println("Updating feed contents.")
+
+		// TODO: We should probably call UpdateSingleFeed() here instead.
+		//       But that breaks Lookup() yet as an alreasy existing node
+		//       cannot be created again. Investigate.
+		// tree[path], _, _ = UpdateSingleFeed(fileIndex[path].Feed, fileIndex[path].Inode)
+		
+		tree = PopulateFeedTree(config)
+		
+		for parentPath, children := range tree {
+			for _, child := range children {
+				fullPath := filepath.Join(parentPath, child.Filename)
+				fileIndex[fullPath] = child
+			}
 		}
 	}
 
@@ -135,7 +145,7 @@ func (n *RssfsNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut)
 	if found == false {
 		return nil, syscall.ENOENT
 	}
-
+	
 	entry.setAttributes(&out.Attr)
 
 	childRssfsNode := NewRssfsNode(childPath)
@@ -145,7 +155,7 @@ func (n *RssfsNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut)
 		Gen:  1,
 		Ino:  entry.Inode,
 	}
-
+	
 	childNode = n.NewInode(ctx, childRssfsNode, sa)
 
 	return childNode, fs.OK
