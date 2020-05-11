@@ -104,7 +104,7 @@ func (n *RssfsNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
 		fmt.Println("Updating feed contents.")
 
 		// TODO: We should probably call UpdateSingleFeed() here instead.
-		//       But that breaks Lookup() yet as an alreasy existing node
+		//       But that breaks Lookup() yet as an already existing node
 		//       cannot be created again. Investigate.
 		// tree[path], _, _ = UpdateSingleFeed(fileIndex[path].Feed, fileIndex[path].Inode)
 		
