@@ -86,7 +86,6 @@ func main() {
 			fileIndex[fullPath] = child
 		}
 	}
-	
 
 	if (runtime.GOOS == "windows") {
 		fmt.Printf("Trying to mount rssfs into %s:...\n", cfg.DriveLetter)

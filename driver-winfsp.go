@@ -2,6 +2,22 @@
 
 package main
 
+// --------------------------------
+// THIS FILE IS NOT QUITE COMPLETE!
+// WINDOWS IS NOT SUPPORTED (YET)!
+// (But the dev always forgets to
+// skip this file when checking in,
+// so this note avoids any confusion
+// with you. Maybe. :-))
+// --------------------------------
+
+
+
+
+
+
+
+
 // Requires WinFsp.
 
 import (
