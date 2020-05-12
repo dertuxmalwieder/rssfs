@@ -47,7 +47,7 @@ Run
 
 ### macOS and other non-Windows machines
 
-    sudo ./rssfs
+    ./rssfs
 
 ### Windows
 
