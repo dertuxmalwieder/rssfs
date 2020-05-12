@@ -25,7 +25,8 @@ does not really exist yet. (Contributions welcome!)
 Build
 -----
 
-    cd rssfs
+    fossil clone https://code.rosaelefanten.org/rssfs rssfs.fossil
+    fossil open rssfs.fossil
     go build
 
 (You\'ll need `GO111MODULES` to be set to \"on\"!)
