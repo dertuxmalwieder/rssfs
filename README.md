@@ -52,3 +52,8 @@ Run
 ### Windows
 
 Not implemented yet. Sorry.
+
+Debate
+------
+
+Discuss `rssfs` in *#rssfs* on freenode.net.
