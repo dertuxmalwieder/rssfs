@@ -131,28 +131,7 @@ func PopulateFeedTree(cfg RssfsConfig) (map[string][]*IndexedFile) {
 		
 		// Add files to the feeds:
 		feedFiles := make([]*IndexedFile, 0)
-		for _, item := range feeddata.Items {
-			var itemTimestamp time.Time
-			if (item.UpdatedParsed != nil) {
-				itemTimestamp = *(item.UpdatedParsed)
-			} else {
-				if (item.PublishedParsed != nil) {
-					itemTimestamp = *(item.PublishedParsed)
-				} else {
-					itemTimestamp = time.Now()
-				}
-			}
-			
-			extension, content := GenerateOutputData(feed, item)
-			feedFiles = append(feedFiles, &IndexedFile{
-				Filename:    fmt.Sprintf("%s.%s", fileNameClean(item.Title), extension),
-				Timestamp:   itemTimestamp,
-				Inode:       nodeCount,
-				Data:        []byte(content),
-			})
-			
-			nodeCount++
-		}
+		feedFiles, nodeCount, feeddata = UpdateSingleFeed(feed, nodeCount)
 
 		retval["/" + fileNameClean(feeddata.Title)] = feedFiles
 	}
