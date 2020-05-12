@@ -1,13 +1,14 @@
 package main
 
 import (
-	"fmt"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/hcl/v2/hclsimple"
+	"github.com/kyokomi/emoji"
 )
 
 var (
@@ -68,17 +69,17 @@ func fileNameClean(in string) string {
 }
 
 func main() {
-	fmt.Println("rssfs starting up.")
+	emoji.Println(":stopwatch: rssfs starting up.")
 	
 	// We need a valid configuration file for feeds and mountpoints.
 	var cfg RssfsConfig
 	hclError := hclsimple.DecodeFile(ConfigFilePath(), nil, &cfg)
 	if hclError != nil {
-		errstr := fmt.Sprintf("No valid configuration file: %s (%s)", ConfigFilePath(), hclError)
-		panic(errstr)
+		emoji.Printf(":bangbang: No valid configuration file: %s (%s)", ConfigFilePath(), hclError)
+		os.Exit(1)
 	}
 
-	fmt.Printf("Using configuration file: %s\n", ConfigFilePath())
+	emoji.Printf(":wrench: Using configuration file: %s\n", ConfigFilePath())
 
 	tree = PopulateFeedTree(cfg)
 	for parentPath, children := range tree {
@@ -89,9 +90,9 @@ func main() {
 	}
 
 	if (runtime.GOOS == "windows") {
-		fmt.Printf("Trying to mount rssfs into %s:...\n", cfg.DriveLetter)
+		emoji.Printf(":gear: Trying to mount rssfs into %s:...\n", cfg.DriveLetter)
 	} else {
-		fmt.Printf("Trying to mount rssfs into %s...\n", cfg.MountPoint)
+		emoji.Printf(":gear: Trying to mount rssfs into %s...\n", cfg.MountPoint)
 	}
 
 	// We're done. Mount!

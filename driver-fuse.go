@@ -4,7 +4,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"os"
 	"os/user"
 	"path/filepath"
 	"strconv"
@@ -14,6 +14,7 @@ import (
 	
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
+	"github.com/kyokomi/emoji"
 )
 
 var (
@@ -101,7 +102,7 @@ func (n *RssfsNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
 	if fileIndex[path].Feed != nil {
 		// Feed objects are set for single feeds. The user seems to read
 		// a single feed. Let's update it first.
-		fmt.Println("Updating feed contents.")
+		emoji.Println(":arrows_counterclockwise: Updating feed contents.")
 
 		// TODO: We should probably call UpdateSingleFeed() here instead.
 		//       But that breaks Lookup() yet as an already existing node
@@ -201,7 +202,7 @@ func (n *RssfsNode) Open(ctx context.Context, mode uint32) (fh fs.FileHandle, fu
 
 	/*
 	if mode & syscall.S_IFREG == 0 {
-		fmt.Printf("File mode not valid: (%d) != (%d)\n", mode, syscall.S_IFREG)
+		emoji.Printf(":bangbang: File mode not valid: (%d) != (%d)\n", mode, syscall.S_IFREG)
 		return nil, 0, syscall.ENOENT
 	}
         */
@@ -244,7 +245,17 @@ func Mount(cfg RssfsConfig) {
 
 	server, err := fuse.NewServer(fs, mountPoint, &opts.MountOptions)
 	if err != nil {
-		panic(err)
+		// Whoops. Quit with a reasonable error message.
+		emoji.Printf(":bangbang: rssfs could not be mounted: %s\n", err)
+		user, userr := user.Current()
+		if userr != nil {
+			emoji.Println(":bangbang: Additionally, the current user could not be determined.")
+			emoji.Printf(":bangbang: Is the mountpoint '%s' writable?\n", mountPoint)
+		} else {
+			emoji.Printf(":bangbang: Is the mountpoint '%s' writable by %s?\n", mountPoint, user.Username)
+		}
+		emoji.Println(":wave: rssfs will quit now.")
+		os.Exit(1)
 	}
 
 	wg := sync.WaitGroup{}
@@ -255,7 +266,7 @@ func Mount(cfg RssfsConfig) {
 		wg.Done()
 	}()
 
-	fmt.Println("Ready! Unmount to terminate.")
+	emoji.Println(":rocket: Ready! Unmount to terminate.")
 
 	wg.Wait()
 }
