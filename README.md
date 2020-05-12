@@ -1,6 +1,8 @@
 rssfs: A RSS reader as a file system
 ====================================
 
+[![Scc Count Badge](https://sloc.xyz/github/dertuxmalwieder/rssfs?category=code)](https://github.com/dertuxmalwieder/rssfs) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/GebtmireuerGeld)
+
 Are you unsure how to read RSS feeds? Why don\'t you just mount them?
 
 What does this software do?
