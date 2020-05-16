@@ -12,8 +12,7 @@ import (
 
 type RssfsConfig struct {
 	// Structure of the rssfs.hcl file
-	MountPoint  string      `hcl:"mountpoint"`            // unused on Windows
-	DriveLetter string      `hcl:"driveletter,optional"`  // unused on non-Windows
+	MountPoint  string      `hcl:"mountpoint"`
 	Feeds       []*Feed     `hcl:"feed,block"`
 	Categories  []*Category `hcl:"category,block"`
 }

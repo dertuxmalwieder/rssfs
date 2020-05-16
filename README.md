@@ -41,7 +41,7 @@ and adjust your settings. The required path is:
 -   On macOS: `$HOME/Library/Application Support/rssfs.hcl`
 -   Elsewhere: `$XDG_CONFIG_HOME/rssfs.hcl`
 
-Set a `mountpoint` or, on Windows, a `driveletter` and one or more feeds
+Set a `mountpoint` (optional on Windows) and one or more feeds
 which can be inside or outside a category. (Categories are not required.
 Subcategories are *not* supported.)
 

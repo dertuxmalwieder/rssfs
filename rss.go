@@ -90,7 +90,7 @@ func main() {
 	}
 
 	if (runtime.GOOS == "windows") {
-		emoji.Printf(":gear: Trying to mount rssfs into %s:...\n", cfg.DriveLetter)
+		emoji.Println(":gear: Trying to mount rssfs...")
 	} else {
 		emoji.Printf(":gear: Trying to mount rssfs into %s...\n", cfg.MountPoint)
 	}
