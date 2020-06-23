@@ -11,13 +11,6 @@ package main
 // with you. Maybe. :-))
 // --------------------------------
 
-
-
-
-
-
-
-
 // Requires WinFsp.
 
 import (
@@ -26,7 +19,7 @@ import (
 	"os/user"
 	"strconv"
 	"sync"
-	
+
 	"github.com/billziss-gh/cgofuse/fuse"
 )
 
@@ -40,7 +33,7 @@ func (file *IndexedFile) setAttributes(out *fuse.Stat_t) {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	out.Ctim = fuse.NewTimespec(file.Timestamp)
 	out.Mtim = fuse.NewTimespec(file.Timestamp)
 
@@ -75,10 +68,10 @@ func (file *IndexedFile) mode() uint32 {
 }
 
 type RssfsNode struct {
-	stat    fuse.Stat_t
-	xatr    map[string][]byte
-	chld    map[string]*RssfsNode
-	data    []byte
+	stat fuse.Stat_t
+	xatr map[string][]byte
+	chld map[string]*RssfsNode
+	data []byte
 }
 
 type Rssfs struct {
@@ -88,9 +81,6 @@ type Rssfs struct {
 	root    *RssfsNode
 	openmap map[uint64]*RssfsNode
 }
-
-
-
 
 // tbd
 // ?? http://www.secfs.net/winfsp/rel/

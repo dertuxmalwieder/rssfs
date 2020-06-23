@@ -5,13 +5,14 @@ package main
 import (
 	"context"
 	"os"
+	"os/signal"
 	"os/user"
 	"path/filepath"
 	"strconv"
 	"sync"
 	"syscall"
 	"time"
-	
+
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"github.com/kyokomi/emoji"
@@ -31,7 +32,7 @@ func (file *IndexedFile) setAttributes(out *fuse.Attr) {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	out.SetTimes(&file.Timestamp, &file.Timestamp, &file.Timestamp)
 
 	out.Mode = file.mode()
@@ -108,9 +109,9 @@ func (n *RssfsNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
 		//       But that breaks Lookup() yet as an already existing node
 		//       cannot be created again. Investigate.
 		// tree[path], _, _ = UpdateSingleFeed(fileIndex[path].Feed, fileIndex[path].Inode)
-		
+
 		tree = PopulateFeedTree(config)
-		
+
 		for parentPath, children := range tree {
 			for _, child := range children {
 				fullPath := filepath.Join(parentPath, child.Filename)
@@ -146,7 +147,7 @@ func (n *RssfsNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut)
 	if found == false {
 		return nil, syscall.ENOENT
 	}
-	
+
 	entry.setAttributes(&out.Attr)
 
 	childRssfsNode := NewRssfsNode(childPath)
@@ -156,24 +157,24 @@ func (n *RssfsNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut)
 		Gen:  1,
 		Ino:  entry.Inode,
 	}
-	
+
 	childNode = n.NewInode(ctx, childRssfsNode, sa)
 
 	return childNode, fs.OK
 }
 
-func (n *RssfsNode) Getattr(ctx context.Context, fh fs.FileHandle, out *fuse.AttrOut) syscall.Errno {		
- 	path := n.currentPath()		
+func (n *RssfsNode) Getattr(ctx context.Context, fh fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
+	path := n.currentPath()
 
-  	entry, found := fileIndex[path]		
- 	if found == false {		
- 		return syscall.ENOENT		
- 	}		
+	entry, found := fileIndex[path]
+	if found == false {
+		return syscall.ENOENT
+	}
 
-  	entry.setAttributes(&out.Attr)
+	entry.setAttributes(&out.Attr)
 
-  	return fs.OK		
- }
+	return fs.OK
+}
 
 func (n *RssfsNode) Read(ctx context.Context, fh fs.FileHandle, dest []byte, off int64) (fuse.ReadResult, syscall.Errno) {
 	// Returns the requested file as bytes.
@@ -201,11 +202,11 @@ func (n *RssfsNode) Open(ctx context.Context, mode uint32) (fh fs.FileHandle, fu
 	filepath := n.currentPath()
 
 	/*
-	if mode & syscall.S_IFREG == 0 {
-		emoji.Printf(":bangbang: File mode not valid: (%d) != (%d)\n", mode, syscall.S_IFREG)
-		return nil, 0, syscall.ENOENT
-	}
-        */
+		if mode & syscall.S_IFREG == 0 {
+			emoji.Printf(":bangbang: File mode not valid: (%d) != (%d)\n", mode, syscall.S_IFREG)
+			return nil, 0, syscall.ENOENT
+		}
+	*/
 
 	entry, found := fileIndex[filepath]
 	if found == false {
@@ -215,14 +216,14 @@ func (n *RssfsNode) Open(ctx context.Context, mode uint32) (fh fs.FileHandle, fu
 	fh = &RssfsNode{
 		data: entry.Data,
 	}
-	
+
 	return fh, 0, 0
 }
 
 func Mount(cfg RssfsConfig) {
 	// Store the configuration globally.
 	config = cfg
-	
+
 	// Mounts the feeds into our mountpoint.
 	virtualRootPath := "/"
 
@@ -234,8 +235,8 @@ func Mount(cfg RssfsConfig) {
 		EntryTimeout: &sec,
 		MountOptions: fuse.MountOptions{
 			AllowOther: true,
-			Debug: false,
-			FsName: "RSS File System",
+			Debug:      false,
+			FsName:     "RSS File System",
 		},
 	}
 
@@ -258,15 +259,23 @@ func Mount(cfg RssfsConfig) {
 		os.Exit(1)
 	}
 
+	// Setting up the signals.
+	quitChan := make(chan os.Signal)
+	shutdownChan := make(chan struct{})
+
+	signal.Notify(quitChan, syscall.SIGINT, syscall.SIGTERM)
+
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 
-	go func() {
+	go func(shutdownChan chan struct{}) {
 		server.Serve()
 		wg.Done()
-	}()
+	}(shutdownChan)
 
 	emoji.Println(":rocket: Ready! Unmount to terminate.")
 
+	<-quitChan
+	close(shutdownChan)
 	wg.Wait()
 }
