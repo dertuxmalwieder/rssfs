@@ -2,11 +2,30 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/mmcdole/gofeed"
 	"jaytaylor.com/html2text"
 )
+
+type ByTitle []*gofeed.Item
+
+func (a ByTitle) Len() int      { return len(a) }
+func (a ByTitle) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a ByTitle) Less(i, j int) bool {
+	return fileNameClean(a[i].Title) < fileNameClean(a[j].Title)
+}
+
+func getItemTimestamp(item *gofeed.Item) time.Time {
+	if item.UpdatedParsed != nil {
+		return *(item.UpdatedParsed)
+	}
+	if item.PublishedParsed != nil {
+		return *(item.PublishedParsed)
+	}
+	return time.Now()
+}
 
 func UpdateSingleFeed(feed *Feed, nodeCount uint64) ([]*IndexedFile, uint64, *gofeed.Feed) {
 	// Updates a single feed. Returns the new list of IndexedFiles,
@@ -15,23 +34,34 @@ func UpdateSingleFeed(feed *Feed, nodeCount uint64) ([]*IndexedFile, uint64, *go
 	feeddata, _ := fp.ParseURL(feed.URL)
 	feedFiles := make([]*IndexedFile, 0)
 
+	sort.Sort(ByTitle(feeddata.Items))
+
+	fname, prev_fname := "", ""
+	// File collision counter
+	col_cnt := 0
+
 	// Add files to the feeds:
 	for _, item := range feeddata.Items {
-		var itemTimestamp time.Time
+		itemTimestamp := getItemTimestamp(item)
 
-		if item.UpdatedParsed != nil {
-			itemTimestamp = *(item.UpdatedParsed)
+		// Checking collision
+		fname = fileNameClean(item.Title)
+		if fname == prev_fname {
+			col_cnt += 1
 		} else {
-			if item.PublishedParsed != nil {
-				itemTimestamp = *(item.PublishedParsed)
-			} else {
-				itemTimestamp = time.Now()
-			}
+			col_cnt = 0
 		}
+		prev_fname = fname
 
 		extension, content := GenerateOutputData(feed, item)
+		if col_cnt > 0 {
+			fname = fmt.Sprintf("%s [%d].%s", fname, col_cnt, extension)
+		} else {
+			fname = fmt.Sprintf("%s.%s", fname, extension)
+		}
+
 		feedFiles = append(feedFiles, &IndexedFile{
-			Filename:  fmt.Sprintf("%s.%s", fileNameClean(item.Title), extension),
+			Filename:  fname,
 			Timestamp: itemTimestamp,
 			Inode:     nodeCount,
 			Data:      []byte(content),
