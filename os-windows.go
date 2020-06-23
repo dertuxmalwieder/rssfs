@@ -11,9 +11,9 @@ import (
 
 type RssfsConfig struct {
 	// Structure of the rssfs.hcl file
-	MountPoint  string      `hcl:"mountpoint,optional"`   // unused on Windows
-	Feeds       []*Feed     `hcl:"feed,block"`
-	Categories  []*Category `hcl:"category,block"`
+	MountPoint string      `hcl:"mountpoint,optional"` // unused on Windows
+	Feeds      []*Feed     `hcl:"feed,block"`
+	Categories []*Category `hcl:"category,block"`
 }
 
 func ConfigFilePath() string {

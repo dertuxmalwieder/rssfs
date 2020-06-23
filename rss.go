@@ -39,8 +39,8 @@ type Feed struct {
 
 type Category struct {
 	// A category has a name in its title and zero or more feeds.
-	Name     string  `hcl:"name,label"`
-	Feeds    []*Feed `hcl:"feed,block"`
+	Name  string  `hcl:"name,label"`
+	Feeds []*Feed `hcl:"feed,block"`
 }
 
 // RssConfig is implemented by platform.
@@ -53,8 +53,8 @@ type IndexedFile struct {
 	Inode       uint64
 	Size        uint64
 
-	Data        []byte
-	Feed        *Feed
+	Data []byte
+	Feed *Feed
 }
 
 func fileNameClean(in string) string {
@@ -70,7 +70,7 @@ func fileNameClean(in string) string {
 
 func main() {
 	emoji.Println(":stopwatch: rssfs starting up.")
-	
+
 	// We need a valid configuration file for feeds and mountpoints.
 	var cfg RssfsConfig
 	hclError := hclsimple.DecodeFile(ConfigFilePath(), nil, &cfg)
@@ -89,13 +89,13 @@ func main() {
 		}
 	}
 
-	if (runtime.GOOS == "windows") {
+	if runtime.GOOS == "windows" {
 		emoji.Println(":gear: Trying to mount rssfs...")
 	} else {
 		emoji.Printf(":gear: Trying to mount rssfs into %s...\n", cfg.MountPoint)
 	}
 
 	// We're done. Mount!
-	
+
 	Mount(cfg)
 }
