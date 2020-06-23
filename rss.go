@@ -14,7 +14,7 @@ import (
 var (
 	fileIndex = map[string]*IndexedFile{
 		// Generate the root node statically:
-		"/": &IndexedFile{
+		"/": {
 			Filename:    "",
 			IsDirectory: true,
 			Timestamp:   time.Now(),
