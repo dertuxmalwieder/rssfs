@@ -9,7 +9,6 @@ import (
 	"os/user"
 	"path/filepath"
 	"strconv"
-	"sync"
 	"syscall"
 	"time"
 
@@ -259,23 +258,15 @@ func Mount(cfg RssfsConfig) {
 		os.Exit(1)
 	}
 
-	// Setting up the signals.
-	quitChan := make(chan os.Signal)
-	shutdownChan := make(chan struct{})
-
-	signal.Notify(quitChan, syscall.SIGINT, syscall.SIGTERM)
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
-	go func(shutdownChan chan struct{}) {
-		server.Serve()
-		wg.Done()
-	}(shutdownChan)
+	go server.Serve()
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
+		<-c
+		server.Unmount()
+	}()
 
 	emoji.Println(":rocket: Ready! Unmount to terminate.")
 
-	<-quitChan
-	close(shutdownChan)
-	wg.Wait()
+	server.Wait()
 }
