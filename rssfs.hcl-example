@@ -1,8 +1,14 @@
 mountpoint = "/tmp/mnt/rssfs"
+style = <<EOF
+<!-- This field is optional or even can be set to empty string -->
+<link rel="stylesheet" href="https://fonts.xz.style/serve/source-code-pro.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
+EOF
+
 category "test category" {
     feed {
         url = "https://blog.golang.org/feed.atom"
-	showlink = true
+        showlink = true
         plaintext = false
     }
 }

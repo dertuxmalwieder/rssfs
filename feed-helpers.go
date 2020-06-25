@@ -17,17 +17,17 @@ func (a ByTitle) Less(i, j int) bool {
 	return fileNameClean(a[i].Title) < fileNameClean(a[j].Title)
 }
 
-func getItemTimestamp(item *gofeed.Item) time.Time {
-	if item.UpdatedParsed != nil {
-		return *(item.UpdatedParsed)
+func getTimestamp(updated *time.Time, published *time.Time) time.Time {
+	if updated != nil {
+		return *updated
 	}
-	if item.PublishedParsed != nil {
-		return *(item.PublishedParsed)
+	if published != nil {
+		return *published
 	}
 	return time.Now()
 }
 
-func UpdateSingleFeed(feed *Feed, nodeCount uint64) ([]*IndexedFile, uint64, *gofeed.Feed) {
+func UpdateSingleFeed(feed *Feed, nodeCount uint64, cfg *RssfsConfig) ([]*IndexedFile, uint64, *gofeed.Feed) {
 	// Updates a single feed. Returns the new list of IndexedFiles,
 	// an updated nodecount and a feed data object (usually feeddata).
 	fp := gofeed.NewParser()
@@ -42,7 +42,7 @@ func UpdateSingleFeed(feed *Feed, nodeCount uint64) ([]*IndexedFile, uint64, *go
 
 	// Add files to the feeds:
 	for _, item := range feeddata.Items {
-		itemTimestamp := getItemTimestamp(item)
+		itemTimestamp := getTimestamp(item.UpdatedParsed, item.PublishedParsed)
 
 		// Checking collision
 		fname = fileNameClean(item.Title)
@@ -53,7 +53,7 @@ func UpdateSingleFeed(feed *Feed, nodeCount uint64) ([]*IndexedFile, uint64, *go
 		}
 		prev_fname = fname
 
-		extension, content := GenerateOutputData(feed, item)
+		extension, content := GenerateOutputData(feed, item, cfg.Style)
 		if col_cnt > 0 {
 			fname = fmt.Sprintf("%s [%d].%s", fname, col_cnt, extension)
 		} else {
@@ -91,20 +91,9 @@ func PopulateFeedTree(cfg RssfsConfig) map[string][]*IndexedFile {
 
 		// Descend into them and add the feeds.
 		for _, subfeed := range category.Feeds {
-			feedFiles, nodeCount, feeddata = UpdateSingleFeed(subfeed, nodeCount)
-
-			var nodeTimestamp time.Time
-
+			feedFiles, nodeCount, feeddata = UpdateSingleFeed(subfeed, nodeCount, &cfg)
 			// Note: Certain blogs won't send a valid time stamp. Urgh.
-			if feeddata.UpdatedParsed != nil {
-				nodeTimestamp = *(feeddata.UpdatedParsed)
-			} else {
-				if feeddata.PublishedParsed != nil {
-					nodeTimestamp = *(feeddata.PublishedParsed)
-				} else {
-					nodeTimestamp = time.Now()
-				}
-			}
+			nodeTimestamp := getTimestamp(feeddata.UpdatedParsed, feeddata.PublishedParsed)
 
 			catsFeeds = append(catsFeeds, &IndexedFile{
 				Filename:    fileNameClean(feeddata.Title),
@@ -161,7 +150,7 @@ func PopulateFeedTree(cfg RssfsConfig) map[string][]*IndexedFile {
 
 		// Add files to the feeds:
 		feedFiles := make([]*IndexedFile, 0)
-		feedFiles, nodeCount, feeddata = UpdateSingleFeed(feed, nodeCount)
+		feedFiles, nodeCount, feeddata = UpdateSingleFeed(feed, nodeCount, &cfg)
 
 		retval["/"+fileNameClean(feeddata.Title)] = feedFiles
 	}
@@ -172,7 +161,7 @@ func PopulateFeedTree(cfg RssfsConfig) map[string][]*IndexedFile {
 	return retval
 }
 
-func GenerateOutputData(feedopts *Feed, item *gofeed.Item) (ext string, content string) {
+func GenerateOutputData(feedopts *Feed, item *gofeed.Item, style string) (ext string, content string) {
 	// Generates the output file (extension and content) for an item.
 	// Takes the feed's options as the first parameter to determine
 	// whether to use plain text and to add the link.
@@ -196,7 +185,7 @@ func GenerateOutputData(feedopts *Feed, item *gofeed.Item) (ext string, content 
 		} else {
 			outTitle = fmt.Sprintf("<h1>%s</h1>", item.Title)
 		}
-		content = fmt.Sprintf("%s%s%s", outTitle, LineBreak, item.Content)
+		content = fmt.Sprintf("%s%s%s%s", style, outTitle, LineBreak, item.Content)
 		ext = "html"
 	}
 

@@ -10,9 +10,11 @@ import (
 	"runtime"
 )
 
+// Structure of the rssfs.hcl file
 type RssfsConfig struct {
-	// Structure of the rssfs.hcl file
-	MountPoint string      `hcl:"mountpoint"`
+	MountPoint string `hcl:"mountpoint"`
+	// Style added to begining of html pages
+	Style      string      `hcl:"style,optional"`
 	Feeds      []*Feed     `hcl:"feed,block"`
 	Categories []*Category `hcl:"category,block"`
 }
