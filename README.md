@@ -56,6 +56,11 @@ Run
 
 Not implemented yet. Sorry.
 
+Repositories
+------------
+
+- AUR: [aur.archlinux.org](https://aur.archlinux.org/packages/rssfs)
+
 Debate
 ------
 
