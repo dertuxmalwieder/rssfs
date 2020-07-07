@@ -102,7 +102,6 @@ func (n *RssfsNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
 	if fileIndex[path].Feed != nil {
 		// Feed objects are set for single feeds. The user seems to read
 		// a single feed. Let's update it first.
-		emoji.Println(":arrows_counterclockwise: Updating feed contents.")
 
 		// TODO: We should probably call UpdateSingleFeed() here instead.
 		//       But that breaks Lookup() yet as an already existing node
@@ -263,6 +262,7 @@ func Mount(cfg RssfsConfig) {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
 		<-c
+		feedcache.EraseAll()
 		server.Unmount()
 	}()
 

@@ -1,10 +1,14 @@
 package main
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
+	"regexp"
 	"sort"
 	"time"
 
+	"github.com/kyokomi/emoji"
 	"github.com/mmcdole/gofeed"
 	"jaytaylor.com/html2text"
 )
@@ -15,6 +19,14 @@ func (a ByTitle) Len() int      { return len(a) }
 func (a ByTitle) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByTitle) Less(i, j int) bool {
 	return fileNameClean(a[i].Title) < fileNameClean(a[j].Title)
+}
+
+func CleanupCacheTime(key string, mins time.Duration) {
+	timer := time.NewTimer(mins * time.Minute)
+	go func() {
+		<-timer.C
+		feedcache.Erase(key)
+	}()
 }
 
 func getItemTimestamp(item *gofeed.Item) time.Time {
@@ -30,9 +42,67 @@ func getItemTimestamp(item *gofeed.Item) time.Time {
 func UpdateSingleFeed(feed *Feed, nodeCount uint64) ([]*IndexedFile, uint64, *gofeed.Feed) {
 	// Updates a single feed. Returns the new list of IndexedFiles,
 	// an updated nodecount and a feed data object (usually feeddata).
-	fp := gofeed.NewParser()
-	feeddata, _ := fp.ParseURL(feed.URL)
-	feedFiles := make([]*IndexedFile, 0)
+	var feeddata *gofeed.Feed
+
+	if feed.Cache {
+		var feedbytes bytes.Buffer
+
+		reNonAlNum, err := regexp.Compile("[^a-zA-Z0-9]+")
+		if err != nil {
+			panic("Regex failed. Oops.")
+		}
+
+		cacheentry := fmt.Sprintf("feed-%s", reNonAlNum.ReplaceAllString(feed.URL, ""))
+		cached, found := feedcache.Read(cacheentry)
+		if found != nil {
+			// Retrieve the feed and put it into our cache:
+			emoji.Printf(":arrows_counterclockwise: Updating feed contents for '%s'.\n", feed.URL)
+
+			fp := gofeed.NewParser()
+			feeddata, _ = fp.ParseURL(feed.URL)
+
+			emoji.Printf(":floppy_disk: Caching the feed from '%s'.\n", feed.URL)
+
+			var mins int32
+			if feed.CacheMins == 0 {
+				mins = 60
+			} else {
+				mins = feed.CacheMins
+			}
+
+			// Convert to and store as bytes:
+			enc := gob.NewEncoder(&feedbytes)
+
+			store := enc.Encode(feeddata)
+			if store != nil {
+				emoji.Printf(":bangbang: Encoding failed: %v\n", store)
+			} else {
+				feedcache.Write(cacheentry, feedbytes.Bytes())
+				CleanupCacheTime(cacheentry, time.Duration(mins))
+			}
+		} else {
+			// Use the cached copy of the feed:
+			feedbytes = *bytes.NewBuffer(cached)
+			dec := gob.NewDecoder(&feedbytes)
+
+			emoji.Printf(":floppy_disk: '%s' was found in the cache.\n", feed.URL)
+
+			decoderr := dec.Decode(&feeddata)
+			if decoderr != nil {
+                                emoji.Printf(":bangbang: Decoding failed: %v\n", decoderr)
+
+				// Return to no caching:
+				fp := gofeed.NewParser()
+				feeddata, _ = fp.ParseURL(feed.URL)
+                        }
+		}
+	} else {
+		// No caching.
+		emoji.Printf(":arrows_counterclockwise: Updating feed contents for '%s'.\n", feed.URL)
+
+		fp := gofeed.NewParser()
+		feeddata, _ = fp.ParseURL(feed.URL)
+	}
 
 	sort.Sort(ByTitle(feeddata.Items))
 
@@ -41,6 +111,7 @@ func UpdateSingleFeed(feed *Feed, nodeCount uint64) ([]*IndexedFile, uint64, *go
 	col_cnt := 0
 
 	// Add files to the feeds:
+	feedFiles := make([]*IndexedFile, 0)
 	for _, item := range feeddata.Items {
 		itemTimestamp := getItemTimestamp(item)
 

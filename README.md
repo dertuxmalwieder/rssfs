@@ -45,6 +45,10 @@ Set a `mountpoint` (optional on Windows) and one or more feeds
 which can be inside or outside a category. (Categories are not required.
 Subcategories are *not* supported.)
 
+If you don't define `cache`, all feeds will be fetched every time you
+open their particular folders. The maximum cache lifetime (`cachemins`)
+defaults to 60 minutes (= 1 hour).
+
 Run
 ---
 

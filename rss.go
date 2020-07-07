@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/kyokomi/emoji"
+	"github.com/peterbourgon/diskv"
 )
 
 var (
@@ -21,20 +23,32 @@ var (
 			Inode:       1001,
 		},
 	}
-	tree = make(map[string][]*IndexedFile)
+	tree       = make(map[string][]*IndexedFile)
+	tempdir, _ = ioutil.TempDir("", "rssfs")
+	feedcache  = diskv.New(diskv.Options{
+		BasePath:     tempdir,
+		Transform:    func(s string) []string { return []string{} },
+		CacheSizeMax: 1024 * 1024 * 1024,
+	})
 )
 
 type Feed struct {
-	// A feed has an URL and two optional switches:
+	// A feed has an URL and four optional switches:
 	// 1. PlainText: Determines whether to parse the feed contents
 	//               as plain text (creates .txt files). Defaults to
-	//               false.
+	//               false. (Key: plaintext)
 	// 2. ShowLink:  Determines whether to add a link to the original
 	//               article to the generated files where applicable.
-	//               Defaults to false.
+	//               Defaults to false. (Key: showlink)
+	// 3. Cache:     Enables or disables the in-memory cache. Defaults
+	//               to false. (Key: cache)
+	// 4. CacheMins: Sets the expiration time of new cache entries.
+	//               Defaults to 60 (minutes). (Key: cachemins)
 	URL       string `hcl:"url"`
 	PlainText bool   `hcl:"plaintext,optional"`
 	ShowLink  bool   `hcl:"showlink,optional"`
+	Cache     bool   `hcl:"cache,optional"`
+	CacheMins int32  `hcl:"cachemins,optional"`
 }
 
 type Category struct {
