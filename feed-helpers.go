@@ -56,8 +56,6 @@ func UpdateSingleFeed(feed *Feed, nodeCount uint64) ([]*IndexedFile, uint64, *go
 		cached, found := feedcache.Read(cacheentry)
 		if found != nil {
 			// Retrieve the feed and put it into our cache:
-			emoji.Printf(":arrows_counterclockwise: Updating feed contents for '%s'.\n", feed.URL)
-
 			fp := gofeed.NewParser()
 			feeddata, _ = fp.ParseURL(feed.URL)
 
@@ -75,7 +73,7 @@ func UpdateSingleFeed(feed *Feed, nodeCount uint64) ([]*IndexedFile, uint64, *go
 
 			store := enc.Encode(feeddata)
 			if store != nil {
-				emoji.Printf(":bangbang: Encoding failed: %v\n", store)
+				emoji.Printf(":bangbang: Encoding the cache entry for '%s' failed: %v\n", feed.URL, store)
 			} else {
 				feedcache.Write(cacheentry, feedbytes.Bytes())
 				CleanupCacheTime(cacheentry, time.Duration(mins))
@@ -85,11 +83,11 @@ func UpdateSingleFeed(feed *Feed, nodeCount uint64) ([]*IndexedFile, uint64, *go
 			feedbytes = *bytes.NewBuffer(cached)
 			dec := gob.NewDecoder(&feedbytes)
 
-			emoji.Printf(":floppy_disk: '%s' was found in the cache.\n", feed.URL)
+			emoji.Printf(":floppy_disk: Loading '%s' from the cache.\n", feed.URL)
 
 			decoderr := dec.Decode(&feeddata)
 			if decoderr != nil {
-                                emoji.Printf(":bangbang: Decoding failed: %v\n", decoderr)
+                                emoji.Printf(":bangbang: Decoding the cache entry for '%s' failed: %v\n", feed.URL, decoderr)
 
 				// Return to no caching:
 				fp := gofeed.NewParser()
@@ -98,7 +96,7 @@ func UpdateSingleFeed(feed *Feed, nodeCount uint64) ([]*IndexedFile, uint64, *go
 		}
 	} else {
 		// No caching.
-		emoji.Printf(":arrows_counterclockwise: Updating feed contents for '%s'.\n", feed.URL)
+		// emoji.Printf(":arrows_counterclockwise: Updating feed contents for '%s'.\n", feed.URL)
 
 		fp := gofeed.NewParser()
 		feeddata, _ = fp.ParseURL(feed.URL)
