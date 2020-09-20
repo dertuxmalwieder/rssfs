@@ -34,7 +34,7 @@ and adjust your settings. The required path is:
 
 -   On Windows: `%APPDATA%\rssfs.hcl`
 -   On macOS: `$HOME/Library/Application Support/rssfs.hcl`
--   Elsewhere: `$XDG_CONFIG_HOME/rssfs.hcl`
+-   Elsewhere: `$XDG_CONFIG_HOME/rssfs.hcl` (or `$HOME/.config/rssfs.hcl`)
 
 Set a `mountpoint` (optional on Windows) and one or more feeds which can be inside or outside a category. (Categories are not required. Subcategories are *not* supported.)
 
