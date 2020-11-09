@@ -11,7 +11,17 @@ package main
 // with you. Maybe. :-))
 // --------------------------------
 
-// Requires WinFsp.
+
+
+
+
+// TODO:
+// - This requires winfsp on Windows.
+// - In theory, once this file is working, it could
+//   replace driver-fuse.go. There is no need to keep
+//   two different FUSE implementations in rssfs, so:
+//      % rm driver-fuse.go
+//      % mv driver-winfsp.go fuse.go
 
 import (
 	"fmt"
@@ -22,10 +32,6 @@ import (
 
 	"github.com/billziss-gh/cgofuse/fuse"
 )
-
-// -------------------------
-// WinFsp implementation:
-// -------------------------
 
 func (file *IndexedFile) setAttributes(out *fuse.Stat_t) {
 	// Sets the file attributes.
@@ -81,10 +87,6 @@ type Rssfs struct {
 	root    *RssfsNode
 	openmap map[uint64]*RssfsNode
 }
-
-// tbd
-// ?? http://www.secfs.net/winfsp/rel/
-// ?? https://github.com/billziss-gh/cgofuse/blob/master/examples/memfs/memfs.go
 
 func Mount(cfg RssfsConfig) {
 	// Mounts the file system as instructed by the user.
