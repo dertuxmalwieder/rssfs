@@ -1,11 +1,11 @@
 module code.rosaelefanten.org/rssfs
 
-go 1.14
+go 1.15
 
 require (
 	github.com/google/btree v1.0.0 // indirect
 	github.com/hanwen/go-fuse/v2 v2.0.3
-	github.com/hashicorp/hcl/v2 v2.6.0
+	github.com/hashicorp/hcl/v2 v2.7.0
 	github.com/kyokomi/emoji v2.2.4+incompatible
 	github.com/mmcdole/gofeed v1.1.0
 	github.com/olekukonko/tablewriter v0.0.4 // indirect
