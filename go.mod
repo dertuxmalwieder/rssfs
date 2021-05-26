@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/billziss-gh/cgofuse v1.5.0
 	github.com/google/btree v1.0.1 // indirect
+	github.com/hanwen/go-fuse/v2 v2.1.0
 	github.com/hashicorp/hcl/v2 v2.10.0
 	github.com/kyokomi/emoji v2.2.4+incompatible
 	github.com/mmcdole/gofeed v1.1.3

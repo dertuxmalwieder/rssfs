@@ -15,17 +15,21 @@ structure for one feed with two articles:
 ## Compatibility
 
 This software is written and tested mainly on macOS with
-[OSXFUSE](http://osxfuse.github.io). Other FUSE implementations should
-work as well. Note that Windows support is still a work in progress and
-does not really exist yet. (Contributions welcome!)
+[macFUSE](http://osxfuse.github.io). Other FUSE implementations should
+work as well.
+
+### A note on Windows support
+
+As Windows would require WinFsp which might or might not properly
+support FUSE file systems, Windows is officially unsupported as of
+now (which means: the time that you read this). Tests and contributions
+are welcome!
 
 ## Build
 
-    fossil clone https://code.rosaelefanten.org/rssfs rssfs.fossil
-    fossil open rssfs.fossil
+    fossil clone https://code.rosaelefanten.org/rssfs
+    cd rssfs
     go build
-
-(You\'ll need `GO111MODULES` to be set to \"on\"!)
 
 ## Configure
 
@@ -36,7 +40,7 @@ and adjust your settings. The required path is:
 -   On macOS: `$HOME/Library/Application Support/rssfs.hcl`
 -   Elsewhere: `$XDG_CONFIG_HOME/rssfs.hcl` (or `$HOME/.config/rssfs.hcl`)
 
-Set a `mountpoint` (optional on Windows) and one or more feeds which can be inside or outside a category. (Categories are not required. Subcategories are *not* supported.)
+Set a `mountpoint` (unless you are on Windows) and one or more feeds which can be inside or outside a category. (Categories are not required. Subcategories are *not* supported.)
 
 If you don't define `cache`, the feed will be fetched every time you open any other feed.
 

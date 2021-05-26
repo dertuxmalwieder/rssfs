@@ -10,13 +10,6 @@ import (
 	"runtime"
 )
 
-type RssfsConfig struct {
-	// Structure of the rssfs.hcl file
-	MountPoint string      `hcl:"mountpoint"`
-	Feeds      []*Feed     `hcl:"feed,block"`
-	Categories []*Category `hcl:"category,block"`
-}
-
 func ConfigFilePath() string {
 	// Returns the path to our configuration file, whether it exists or not.
 	// On non-macOS systems, this should be $XDG_CONFIG_HOME/rssfs.hcl, on

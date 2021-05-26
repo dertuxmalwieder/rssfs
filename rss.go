@@ -57,7 +57,12 @@ type Category struct {
 	Feeds []*Feed `hcl:"feed,block"`
 }
 
-// RssConfig is implemented by platform.
+type RssfsConfig struct {
+        // Structure of the rssfs.hcl file
+        MountPoint string      `hcl:"mountpoint"`
+        Feeds      []*Feed     `hcl:"feed,block"`
+        Categories []*Category `hcl:"category,block"`
+}
 
 type IndexedFile struct {
 	// A file.
